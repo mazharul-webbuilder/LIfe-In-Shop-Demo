@@ -1,4 +1,9 @@
-import { BRAND, CATEGORIES, HERO_SLIDES, PRODUCTS, SIZE_CHARTS } from './data/catalog.js';
+(function () {
+  'use strict';
+
+  const catalog = window.LIFEINSHOP_CATALOG;
+  if (!catalog) return;
+  const { BRAND, CATEGORIES, HERO_SLIDES, PRODUCTS, SIZE_CHARTS } = catalog;
 
 const BAG_STORAGE_KEY = 'lifeinshop_bag_v1';
 const DEFAULT_PRODUCT_ID = 'air-jordan-4-grey';
@@ -89,16 +94,16 @@ function loadBag() {
         size: String(entry.size || ''),
         qty: Math.min(10, Math.max(1, parseInt(entry.qty, 10) || 1)),
       }));
-  } catch {
-    state.bag = [];
+  } catch (_) {
+    if (!Array.isArray(state.bag)) state.bag = [];
   }
 }
 
 function saveBag() {
   try {
     window.localStorage.setItem(BAG_STORAGE_KEY, JSON.stringify(state.bag));
-  } catch {
-    // Ignore storage quota or private-mode restriction
+  } catch (_) {
+    // Ignore storage quota or file:// privacy restriction
   }
 }
 
@@ -1020,13 +1025,17 @@ function initHomeCatalog() {
     });
 
     if (updateUrl) {
-      const url = new URL(window.location.href);
-      if (safeCat === 'all') {
-        url.searchParams.delete('category');
-      } else {
-        url.searchParams.set('category', safeCat);
+      try {
+        const url = new URL(window.location.href);
+        if (safeCat === 'all') {
+          url.searchParams.delete('category');
+        } else {
+          url.searchParams.set('category', safeCat);
+        }
+        window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+      } catch (_) {
+        // Ignore SecurityError on file:/// origin
       }
-      history.replaceState(null, '', url.pathname + url.search + url.hash);
     }
 
     if (scroll && catalogSection) {
@@ -1413,9 +1422,13 @@ function initProductPage() {
     const sibling = getProductById(swatch.dataset.siblingId);
     if (!sibling || sibling.id === state.currentProduct?.id) return;
 
-    const url = new URL(window.location.href);
-    url.searchParams.set('id', sibling.id);
-    history.replaceState(null, '', url.pathname + url.search);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('id', sibling.id);
+      window.history.replaceState(null, '', url.pathname + url.search);
+    } catch (_) {
+      // Ignore SecurityError on file:/// origin
+    }
     renderPDP(sibling);
   });
 
@@ -1666,6 +1679,7 @@ function initSharedInteractions() {
    ========================================================================== */
 
 function init() {
+  state.page = document.body?.dataset?.page || 'home';
   loadBag();
   renderBagUI();
   initSharedInteractions();
@@ -1685,3 +1699,4 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
+})();
