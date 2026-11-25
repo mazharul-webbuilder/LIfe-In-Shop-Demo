@@ -630,7 +630,7 @@ function showTypingIndicator() {
 
   const typing = document.createElement('div');
   typing.className = 'chat-typing';
-  typing.setAttribute('aria-label', 'Assistant is typing');
+  typing.setAttribute('aria-label', 'Emru AI is typing');
   typing.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
   container.appendChild(typing);
   container.scrollTop = container.scrollHeight;
@@ -708,11 +708,11 @@ function buildAIReply(rawInput) {
 
   // 7. Short Greetings
   if (/^(hi|hello|hey|assalamu|salam|hlw|good\s*(morning|afternoon|evening))\b/.test(text)) {
-    return `Hello! Welcome to <strong>${escapeHtml(BRAND.name)}</strong>. I'm running in interactive Demo Mode — tap a quick topic below or ask about sneaker/apparel sizes, delivery charges, best sellers, or our Narayanganj showroom.`;
+    return `Hello! Welcome to <strong>${escapeHtml(BRAND.name)}</strong>. I'm <strong>Emru AI</strong>, your personal shopping assistant (Demo Mode) — tap a quick topic below or ask about sneaker/apparel sizes, delivery charges, best sellers, or our Narayanganj showroom.`;
   }
 
   // 8. Generic Polished Demo Fallback for ANY other arbitrary message
-  return `Thanks for your message! This interactive AI Shopping Assistant is running in <strong>Demo Preview Mode</strong>. In your live custom Laravel store, it connects directly to real-time stock, smart sizing, and order tracking. Need instant human help? Tap below to reach us on WhatsApp (${escapeHtml(BRAND.phoneDisplay)}).<br><a href="${escapeHtml(BRAND.whatsappUrl)}" target="_blank" rel="noopener">Chat on WhatsApp →</a>`;
+  return `Thanks for your message! <strong>Emru AI</strong> is running in <strong>Demo Preview Mode</strong>. In your live custom Laravel store, it connects directly to real-time stock, smart sizing, and order tracking. Need instant human help? Tap below to reach us on WhatsApp (${escapeHtml(BRAND.phoneDisplay)}).<br><a href="${escapeHtml(BRAND.whatsappUrl)}" target="_blank" rel="noopener">Chat on WhatsApp →</a>`;
 }
 
 function sendChatMessage(rawText) {
@@ -766,8 +766,8 @@ function initAIChat() {
     state.chatInitialized = true;
     const welcome =
       state.page === 'product' && state.currentProduct
-        ? `Hi! Looking at <strong>${escapeHtml(state.currentProduct.name)}</strong> (${formatBDT(state.currentProduct.price)})? Ask me about sizing, fit, Cash on Delivery charges, or our Narayanganj showroom.`
-        : `Welcome to <strong>${escapeHtml(BRAND.name)}</strong>. I'm your interactive AI Shopping Assistant (Demo Mode). Ask about sizes, Inside/Outside Dhaka delivery, best sellers, or our showroom.`;
+        ? `Hi! Looking at <strong>${escapeHtml(state.currentProduct.name)}</strong> (${formatBDT(state.currentProduct.price)})? I'm <strong>Emru AI</strong> — ask me about sizing, fit, Cash on Delivery charges, or our Narayanganj showroom.`
+        : `Welcome to <strong>${escapeHtml(BRAND.name)}</strong>! I'm <strong>Emru AI</strong>, your personal shopping assistant (Demo Mode). Ask about sizes, Inside/Outside Dhaka delivery, best sellers, or our showroom.`;
     appendChatMessage(welcome, 'bot');
   };
 
