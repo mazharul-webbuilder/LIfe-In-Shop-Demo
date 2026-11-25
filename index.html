@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life In Shop — Premium Men's Footwear &amp; Apparel</title>
+  <meta name="description" content="Minimal Design. Maximum Confidence. Premium Men's Footwear & Apparel in Bangladesh. Cash on Delivery nationwide & Narayanganj Showroom.">
+  <meta name="theme-color" content="#0A0A0A">
+  <link rel="icon" type="image/webp" href="assets/images/favicon.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="home">
+
+  <!-- Announcement Bar -->
+  <div class="announcement-bar" role="region" aria-label="Store shipping notice">
+    <div class="container announcement-inner">
+      <span>Inside Dhaka ৳80 · Outside Dhaka ৳130 · Cash on Delivery<span class="announcement-extra"> · Narayanganj Showroom</span></span>
+    </div>
+  </div>
+
+  <!-- Sticky Header -->
+  <header id="site-header" class="site-header">
+    <div class="container header-inner">
+      <div class="header-left">
+        <button type="button" id="mobile-menu-btn" class="icon-btn mobile-only" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav-drawer">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <a href="index.html" class="brand-logo" aria-label="Life In Shop Home">
+          <img src="assets/images/logo.webp" alt="Life In Shop" height="36" width="68">
+        </a>
+      </div>
+
+      <nav class="desktop-nav" aria-label="Primary categories">
+        <a href="#catalog-section" class="nav-link" data-nav-category="sneakers">Sneakers</a>
+        <a href="#catalog-section" class="nav-link" data-nav-category="running">Running</a>
+        <a href="#catalog-section" class="nav-link" data-nav-category="denim">Denim</a>
+        <a href="#catalog-section" class="nav-link" data-nav-category="chinos">Chinos</a>
+        <a href="#catalog-section" class="nav-link" data-nav-category="shirts">Shirts</a>
+        <a href="#catalog-section" class="nav-link" data-nav-category="polos">Polos</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" id="search-open-btn" class="icon-btn" aria-label="Search products" aria-controls="search-overlay">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7.5"></circle>
+            <line x1="20" y1="20" x2="16.4" y2="16.4"></line>
+          </svg>
+        </button>
+        <button type="button" id="bag-open-btn" class="icon-btn bag-btn" aria-label="Open shopping bag" aria-controls="bag-drawer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 8h12l1.2 12.5a1 1 0 0 1-1 1.1H5.8a1 1 0 0 1-1-1.1L6 8Z"></path>
+            <path d="M9 8V6a3 3 0 0 1 6 0v2"></path>
+          </svg>
+          <span id="bag-count-badge" class="bag-badge" aria-live="polite">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Option A: Editorial Studio Hero Slider -->
+    <section id="hero-slider" class="hero-slider" aria-label="Featured collections">
+      <div id="hero-track" class="hero-track"></div>
+
+      <div class="hero-controls">
+        <div class="container hero-controls-inner">
+          <span id="hero-counter" class="hero-counter">01 / 03</span>
+          <div id="hero-dots" class="hero-dots" role="tablist" aria-label="Slide selector"></div>
+          <div class="hero-arrows">
+            <button type="button" id="hero-prev" class="hero-arrow-btn" aria-label="Previous slide">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <button type="button" id="hero-next" class="hero-arrow-btn" aria-label="Next slide">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category Strip -->
+    <section class="section section-categories" aria-labelledby="categories-heading">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <span class="section-eyebrow">Shop By Category</span>
+            <h2 id="categories-heading" class="section-title">Curated Essentials</h2>
+          </div>
+          <a href="#catalog-section" class="text-link" data-nav-category="all">View All</a>
+        </div>
+        <div id="category-grid" class="category-grid"></div>
+      </div>
+    </section>
+
+    <!-- Best Sellers / Filterable Catalog -->
+    <section id="catalog-section" class="section section-catalog" aria-labelledby="catalog-heading">
+      <div class="container">
+        <div class="catalog-top">
+          <div class="section-header-inline">
+            <div>
+              <span class="section-eyebrow">New &amp; Best Selling</span>
+              <h2 id="catalog-heading" class="section-title">The Collection</h2>
+            </div>
+            <span id="catalog-count" class="catalog-count">14 Items</span>
+          </div>
+          <div id="filter-tabs" class="filter-tabs" role="tablist" aria-label="Filter products by category"></div>
+        </div>
+
+        <div id="product-grid" class="product-grid"></div>
+      </div>
+    </section>
+
+    <!-- 4-Item Hairline Trust & Showroom Strip -->
+    <section class="trust-strip" aria-label="Store guarantees and showroom">
+      <div class="container">
+        <div class="trust-grid">
+          <div class="trust-item">
+            <span class="trust-num">01</span>
+            <h3 class="trust-title">Cash on Delivery</h3>
+            <p class="trust-desc">Order in seconds with zero upfront risk. Pay when your parcel arrives.</p>
+          </div>
+          <div class="trust-item">
+            <span class="trust-num">02</span>
+            <h3 class="trust-title">Nationwide Dispatch</h3>
+            <p class="trust-desc">Inside Dhaka ৳80 (24–48h) · Outside Dhaka ৳130 (2–4 business days).</p>
+          </div>
+          <div class="trust-item">
+            <span class="trust-num">03</span>
+            <h3 class="trust-title">7-Day Size Exchange</h3>
+            <p class="trust-desc">Not the right fit? Easy size exchange on unused footwear &amp; apparel.</p>
+          </div>
+          <div class="trust-item">
+            <span class="trust-num">04</span>
+            <h3 class="trust-title">Narayanganj Showroom</h3>
+            <p class="trust-desc">Shimanto Tower, Lift-Level 6, Shop 6031, Jalkhuri. <a href="https://maps.google.com/?q=23.65948,90.50332" target="_blank" rel="noopener" class="inline-underline">Get Directions</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Compact Editorial Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="brand-logo" aria-label="Life In Shop Home">
+            <img src="assets/images/logo.webp" alt="Life In Shop" height="38" width="72">
+          </a>
+          <p class="footer-tagline">Committed With Quality</p>
+          <p class="footer-about">Minimal Design. Maximum Confidence. Premium Men's Footwear &amp; Apparel — Quality You Can Feel, Style You Can Trust.</p>
+          <div class="footer-payments" aria-label="Accepted payment methods">
+            <span class="payment-pill">Cash on Delivery</span>
+            <span class="payment-pill">bKash</span>
+            <span class="payment-pill">Nagad</span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h3 class="footer-heading">Categories</h3>
+          <ul class="footer-links">
+            <li><a href="#catalog-section" data-nav-category="sneakers">Sneakers</a></li>
+            <li><a href="#catalog-section" data-nav-category="running">Running Shoes</a></li>
+            <li><a href="#catalog-section" data-nav-category="denim">Denim Jeans</a></li>
+            <li><a href="#catalog-section" data-nav-category="chinos">Chino Pants</a></li>
+            <li><a href="#catalog-section" data-nav-category="shirts">Casual Shirts</a></li>
+            <li><a href="#catalog-section" data-nav-category="polos">Polo Shirts</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h3 class="footer-heading">Showroom &amp; Support</h3>
+          <ul class="footer-contact-list">
+            <li>
+              <span class="contact-label">Showroom</span>
+              <a href="https://maps.google.com/?q=23.65948,90.50332" target="_blank" rel="noopener">Jalkhuri, Shimanto Tower, Lift-Level 6, Shop 6031, Narayanganj 1420</a>
+            </li>
+            <li>
+              <span class="contact-label">Phone</span>
+              <a href="tel:+8801647166769">+8801647-166769</a>
+            </li>
+            <li>
+              <span class="contact-label">WhatsApp</span>
+              <a href="https://wa.me/8801647166769" target="_blank" rel="noopener">Chat on WhatsApp</a>
+            </li>
+            <li>
+              <span class="contact-label">Facebook</span>
+              <a href="https://www.facebook.com/lifeinshoop" target="_blank" rel="noopener">facebook.com/lifeinshoop</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 Life In Shop. All rights reserved.</p>
+        <p class="footer-demo-note">Interactive Storefront Concept Preview</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Shared Backdrop -->
+  <div id="drawer-backdrop" class="drawer-backdrop" aria-hidden="true"></div>
+
+  <!-- Mobile Navigation Drawer -->
+  <aside id="mobile-nav-drawer" class="drawer drawer-left" aria-label="Mobile navigation" aria-hidden="true">
+    <div class="drawer-header">
+      <img src="assets/images/logo.webp" alt="Life In Shop" class="drawer-logo-dark" height="32" width="60">
+      <button type="button" id="mobile-nav-close" class="icon-btn" aria-label="Close navigation menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="drawer-body mobile-nav-body">
+      <nav class="mobile-nav-links" aria-label="Mobile categories">
+        <a href="#catalog-section" class="mobile-nav-link" data-nav-category="all">All Collection</a>
+        <a href="#catalog-section" class="mobile-nav-link" data-nav-category="sneakers">Sneakers</a>
+        <a href="#catalog-section" class="mobile-nav-link" data-nav-category="running">Running Shoes</a>
+        <a href="#catalog-section" class="mobile-nav-link" data-nav-category="denim">Denim Jeans</a>
+        <a href="#catalog-section" class="mobile-nav-link" data-nav-category="chinos">Chino Pants</a>
+        <a href="#catalog-section" class="mobile-nav-link" data-nav-category="shirts">Casual Shirts</a>
+        <a href="#catalog-section" class="mobile-nav-link" data-nav-category="polos">Polo Shirts</a>
+      </nav>
+      <div class="mobile-nav-meta">
+        <p class="mobile-nav-meta-title">Narayanganj Showroom</p>
+        <p class="mobile-nav-meta-text">Jalkhuri, Shimanto Tower, Level 6, Shop 6031</p>
+        <div class="mobile-nav-meta-actions">
+          <a href="tel:+8801647166769" class="meta-action-link">Call +8801647-166769</a>
+          <a href="https://wa.me/8801647166769" target="_blank" rel="noopener" class="meta-action-link">WhatsApp Support</a>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Search Overlay -->
+  <div id="search-overlay" class="search-overlay" role="dialog" aria-modal="true" aria-label="Search store" aria-hidden="true">
+    <div class="search-panel">
+      <div class="search-bar-wrap">
+        <svg class="search-bar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7.5"></circle>
+          <line x1="20" y1="20" x2="16.4" y2="16.4"></line>
+        </svg>
+        <input type="search" id="search-input" class="search-input" placeholder="Search sneakers, denim, Jordan, HOKA, shirts..." autocomplete="off">
+        <button type="button" id="search-close-btn" class="icon-btn icon-btn-dark" aria-label="Close search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div id="search-results" class="search-results"></div>
+    </div>
+  </div>
+
+  <!-- Shopping Bag Drawer -->
+  <aside id="bag-drawer" class="drawer drawer-right" aria-label="Shopping bag" aria-hidden="true">
+    <div class="drawer-header">
+      <h2 class="drawer-title">Shopping Bag</h2>
+      <button type="button" id="bag-close-btn" class="icon-btn icon-btn-dark" aria-label="Close shopping bag">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      <div id="bag-empty-state" class="bag-empty-state">
+        <p class="bag-empty-title">Your bag is empty</p>
+        <p class="bag-empty-sub">Explore sneakers, denim, and essentials with fast nationwide COD.</p>
+      </div>
+      <div id="bag-items" class="bag-items"></div>
+    </div>
+
+    <div id="bag-footer" class="drawer-footer">
+      <div class="bag-subtotal-row">
+        <span>Subtotal</span>
+        <strong id="bag-subtotal" class="tabular-price">৳0</strong>
+      </div>
+      <p class="bag-shipping-note">Delivery calculated at checkout (Inside Dhaka ৳80 / Outside ৳130)</p>
+      <button type="button" id="bag-checkout-btn" class="btn btn-primary btn-full">Proceed to COD Checkout</button>
+    </div>
+  </aside>
+
+  <!-- Instant 4-Field BD COD Checkout Drawer -->
+  <aside id="checkout-drawer" class="drawer drawer-right drawer-checkout" aria-label="Express COD checkout" aria-hidden="true">
+    <div class="drawer-header">
+      <div>
+        <h2 class="drawer-title">Express Checkout</h2>
+        <p class="drawer-subtitle">Cash on Delivery · No account needed</p>
+      </div>
+      <button type="button" id="checkout-close-btn" class="icon-btn icon-btn-dark" aria-label="Close checkout">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="drawer-body checkout-body">
+      <form id="checkout-form" class="checkout-form" novalidate>
+        <div id="checkout-summary-items" class="checkout-summary-items"></div>
+
+        <div class="form-group">
+          <label for="co-name" class="form-label">Full Name <span class="req">*</span></label>
+          <input type="text" id="co-name" class="form-input" placeholder="e.g. Tanvir Ahmed" autocomplete="name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="co-phone" class="form-label">Mobile Number (11 digits) <span class="req">*</span></label>
+          <input type="tel" id="co-phone" class="form-input" inputmode="numeric" maxlength="11" placeholder="01XXXXXXXXX" autocomplete="tel" required>
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Delivery Zone <span class="req">*</span></span>
+          <div class="radio-grid">
+            <label class="radio-card">
+              <input type="radio" name="co-zone" value="inside" checked>
+              <span class="radio-card-box">
+                <span class="radio-card-title">Inside Dhaka</span>
+                <span class="radio-card-price tabular-price">৳80</span>
+              </span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="co-zone" value="outside">
+              <span class="radio-card-box">
+                <span class="radio-card-title">Outside Dhaka</span>
+                <span class="radio-card-price tabular-price">৳130</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="co-address" class="form-label">Full Delivery Address <span class="req">*</span></label>
+          <textarea id="co-address" class="form-input form-textarea" rows="2" placeholder="House, Road, Area / Thana, District" autocomplete="street-address" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Payment Method</span>
+          <div class="radio-grid">
+            <label class="radio-card">
+              <input type="radio" name="co-payment" value="cod" checked>
+              <span class="radio-card-box">
+                <span class="radio-card-title">Cash on Delivery</span>
+                <span class="radio-card-sub">Pay at doorstep</span>
+              </span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="co-payment" value="bkash">
+              <span class="radio-card-box">
+                <span class="radio-card-title">bKash / Nagad</span>
+                <span class="radio-card-sub">Instant MFS</span>
+              </span>
+            </label>
+          </div>
+          <div id="co-bkash-note" class="bkash-note" hidden>
+            Demo Preview: In the live Laravel store, bKash/Nagad payment instructions or gateway checkout appear immediately here. You can still submit this demo order now.
+          </div>
+        </div>
+
+        <div class="checkout-totals">
+          <div class="total-line">
+            <span>Subtotal</span>
+            <span id="co-subtotal" class="tabular-price">৳0</span>
+          </div>
+          <div class="total-line">
+            <span>Delivery Charge</span>
+            <span id="co-shipping" class="tabular-price">৳80</span>
+          </div>
+          <div class="total-line total-grand">
+            <span>Total Payable</span>
+            <strong id="co-total" class="tabular-price">৳80</strong>
+          </div>
+        </div>
+
+        <p id="co-error" class="form-error" role="alert" hidden></p>
+
+        <button type="submit" id="co-submit-btn" class="btn btn-primary btn-full">Confirm Order — Cash on Delivery</button>
+      </form>
+
+      <!-- Order Success View -->
+      <div id="checkout-success" class="checkout-success" hidden>
+        <div class="success-icon" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <span class="success-eyebrow">Demo Order Confirmed</span>
+        <h3 class="success-title">Thank you for your order</h3>
+        <p class="success-id">Order ID: <strong id="co-order-id" class="tabular-price">#LIS-0000</strong></p>
+        <div id="co-order-summary" class="success-summary"></div>
+        <div class="success-actions">
+          <a href="https://wa.me/8801647166769" id="co-wa-confirm" target="_blank" rel="noopener" class="btn btn-whatsapp btn-full">Send Order to WhatsApp</a>
+          <button type="button" id="co-continue-btn" class="btn btn-secondary btn-full">Continue Shopping</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Floating Dock: Monochrome AI Shopping Assistant (replaces sticky cart) + WhatsApp -->
+  <div id="floating-dock" class="floating-dock" aria-label="Quick assistance">
+    <button type="button" id="ai-chat-trigger" class="ai-trigger-btn" aria-label="Open Life In Shop AI Shopping Assistant" aria-expanded="false" aria-controls="ai-chat-panel">
+      <span class="ai-trigger-icon-wrap" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a8.5 8.5 0 0 1-8.5 8.5c-1.4 0-2.7-.3-3.9-.9L3.5 21l1.4-4.9A8.5 8.5 0 1 1 21 12Z"></path>
+          <path d="M9 10.5h.01"></path>
+          <path d="M12 10.5h.01"></path>
+          <path d="M15 10.5h.01"></path>
+        </svg>
+        <span class="online-dot"></span>
+      </span>
+      <span class="ai-trigger-label">Ask AI</span>
+    </button>
+
+    <a href="https://wa.me/8801647166769" id="wa-float-link" class="wa-float-btn" target="_blank" rel="noopener" aria-label="Chat with Life In Shop on WhatsApp">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38a9.87 9.87 0 0 0 4.76 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.85 9.85 0 0 0 12.04 2Zm5.78 14.07c-.24.68-1.41 1.3-1.95 1.38-.5.08-1.13.11-1.83-.11-.42-.13-.96-.31-1.66-.61-2.92-1.26-4.82-4.2-4.97-4.4-.14-.2-1.18-1.57-1.18-3 0-1.43.75-2.13 1.02-2.42.27-.29.59-.36.79-.36h.57c.18 0 .43-.07.67.51.24.59.84 2.04.91 2.19.08.15.13.32.02.52-.1.2-.15.32-.3.49-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.3.76 1.26 1.64 2.04 1.13 1.01 2.08 1.32 2.38 1.47.3.15.47.12.64-.08.18-.2.74-.86.94-1.16.2-.3.4-.25.67-.15.27.1 1.73.82 2.03.97.3.15.49.22.56.34.08.13.08.73-.17 1.41Z"></path>
+      </svg>
+    </a>
+  </div>
+
+  <!-- Interactive AI Shopping Assistant Panel -->
+  <section id="ai-chat-panel" class="ai-chat-panel" role="dialog" aria-label="Life In Shop AI Assistant" aria-hidden="true">
+    <div class="ai-chat-header">
+      <div class="ai-chat-identity">
+        <span class="online-dot"></span>
+        <div>
+          <h2 class="ai-chat-title">Life In Shop Assistant</h2>
+          <p class="ai-chat-sub">Demo Mode · Instant Sizing &amp; Order Help</p>
+        </div>
+      </div>
+      <button type="button" id="ai-chat-close" class="icon-btn" aria-label="Close AI assistant">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div id="ai-chat-messages" class="ai-chat-messages" aria-live="polite"></div>
+
+    <div id="ai-chat-chips" class="ai-chat-chips" aria-label="Quick suggestions"></div>
+
+    <form id="ai-chat-form" class="ai-chat-form">
+      <input type="text" id="ai-chat-input" class="ai-chat-input" placeholder="Ask about size, delivery, price..." autocomplete="off">
+      <button type="submit" class="ai-chat-send" aria-label="Send message">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </form>
+  </section>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
