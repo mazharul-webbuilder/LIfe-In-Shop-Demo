@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life In Shop — Showroom POS &amp; Unified Orders</title>
+  <meta name="description" content="Unified Showroom POS Terminal, Online COD Order Manager, and Real-Time Variant Inventory for Life In Shop Narayanganj.">
+  <meta name="theme-color" content="#0A0A0A">
+  <link rel="icon" type="image/webp" href="assets/images/favicon.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="pos.css">
+</head>
+<body data-page="pos">
+
+  <!-- Top Unified POS Bar (56px, #0A0A0A) -->
+  <header id="pos-header" class="pos-header no-print">
+    <div class="pos-header-left">
+      <a href="pos.html" class="pos-brand" aria-label="Life In Shop Showroom POS">
+        <img src="assets/images/logo.webp" alt="Life In Shop" height="30" width="56">
+        <span class="pos-brand-tag">POS &amp; ORDERS</span>
+      </a>
+      <span id="pos-sync-badge" class="pos-sync-badge" title="Single-source-of-truth inventory synced live with Storefront">
+        <span class="sync-dot" aria-hidden="true"></span>
+        <span>Live Synced</span>
+      </span>
+    </div>
+
+    <nav id="pos-workspace-tabs" class="pos-workspace-tabs" role="tablist" aria-label="POS workspace sections">
+      <button type="button" class="workspace-tab is-active" role="tab" aria-selected="true" data-workspace-tab="pos">
+        POS Terminal
+      </button>
+      <button type="button" class="workspace-tab" role="tab" aria-selected="false" data-workspace-tab="orders">
+        <span>Online Orders</span>
+        <span id="orders-pending-badge" class="tab-count-badge" aria-label="Pending online orders">0</span>
+      </button>
+      <button type="button" class="workspace-tab" role="tab" aria-selected="false" data-workspace-tab="inventory">
+        Inventory &amp; Shift
+      </button>
+    </nav>
+
+    <div class="pos-header-right">
+      <a href="index.html" class="pos-storefront-link">↗ Storefront</a>
+    </div>
+  </header>
+
+  <!-- Workspace Main Shell -->
+  <main class="pos-main no-print">
+
+    <!-- ================================================================
+         VIEW 1: SHOWROOM POS TERMINAL
+         ================================================================ -->
+    <section id="view-pos" class="workspace-view is-active" aria-label="Showroom POS Terminal">
+
+      <!-- Mobile / Narrow Tablet (<1024px) Pane Switcher -->
+      <div id="pos-mobile-tabs" class="pos-mobile-tabs" role="tablist" aria-label="POS mobile panes">
+        <button type="button" class="mobile-pane-tab is-active" data-pos-pane="catalog">Catalog</button>
+        <button type="button" class="mobile-pane-tab" data-pos-pane="bill">
+          Active Bill (<span id="pos-mobile-bill-count">0</span>)
+        </button>
+      </div>
+
+      <div class="pos-split-layout">
+
+        <!-- Left Pane (64% Desktop): Search/Scan + Categories + 1:1 Grid -->
+        <div id="pos-catalog-pane" class="pos-catalog-pane is-mobile-active">
+          <div class="pos-toolbar">
+            <div class="pos-search-bar">
+              <svg class="pos-search-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7.5"></circle>
+                <line x1="20" y1="20" x2="16.4" y2="16.4"></line>
+              </svg>
+              <input type="search" id="pos-search-input" class="pos-search-input" placeholder="Scan barcode or search SKU / product... (F2)" autocomplete="off">
+              <button type="button" id="pos-scan-demo-btn" class="btn-pos-scan" title="Simulate USB barcode scan of an in-stock sneaker">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+                  <path d="M3 5v14"></path>
+                  <path d="M7 5v14"></path>
+                  <path d="M11 5v14"></path>
+                  <path d="M14 5v14"></path>
+                  <path d="M18 5v14"></path>
+                  <path d="M21 5v14"></path>
+                </svg>
+                <span>Scan Demo</span>
+              </button>
+            </div>
+            <div id="pos-scan-toast" class="pos-scan-toast" role="status" aria-live="polite" hidden></div>
+            <div id="pos-category-tabs" class="pos-category-tabs" role="tablist" aria-label="Filter catalog"></div>
+          </div>
+
+          <div class="pos-grid-scroll">
+            <div id="pos-product-grid" class="pos-product-grid"></div>
+          </div>
+        </div>
+
+        <!-- Right Pane (36% Desktop): Active Counter Bill -->
+        <aside id="pos-bill-pane" class="pos-bill-pane" aria-label="Active counter bill">
+          <div class="bill-header">
+            <div class="bill-header-title">
+              <h2>Active Bill</h2>
+              <span class="bill-shift-meta">Narayanganj · Emran</span>
+            </div>
+            <div class="bill-header-actions">
+              <button type="button" id="pos-hold-btn" class="bill-mini-btn" title="Park active bill (F6)">Hold F6</button>
+              <button type="button" id="pos-recall-btn" class="bill-mini-btn" title="Recall parked bill">Recall (0)</button>
+              <button type="button" id="pos-clear-btn" class="bill-mini-btn bill-mini-danger" title="Clear active bill">Clear</button>
+            </div>
+          </div>
+
+          <!-- Walk-In Customer Quick Attach -->
+          <div class="bill-customer-bar">
+            <div class="bill-customer-inputs">
+              <input type="tel" id="pos-cust-phone" class="pos-input-sm" inputmode="numeric" maxlength="11" placeholder="Customer Phone (01XXXXXXXXX)" autocomplete="off">
+              <input type="text" id="pos-cust-name" class="pos-input-sm" placeholder="Walk-in Customer Name" autocomplete="off">
+            </div>
+            <div id="pos-cust-badge" class="bill-cust-badge" hidden></div>
+          </div>
+
+          <!-- Cart Items Scroll Area -->
+          <div class="bill-items-scroll">
+            <div id="pos-cart-empty" class="bill-empty">
+              <p class="bill-empty-title">Counter Bill Empty</p>
+              <p class="bill-empty-sub">Tap a product tile, scan a barcode, or click <strong>Scan Demo</strong> to start billing.</p>
+            </div>
+            <div id="pos-cart-items" class="bill-cart-items"></div>
+          </div>
+
+          <!-- Counter Discount + Payment + Totals Dock -->
+          <div class="bill-checkout-dock">
+            <!-- Discount Row -->
+            <div class="bill-discount-block">
+              <div class="bill-discount-row">
+                <span class="bill-block-label">Discount</span>
+                <div class="disc-type-toggle" role="group" aria-label="Discount type">
+                  <button type="button" class="disc-type-btn is-active" data-disc-type="fixed">৳</button>
+                  <button type="button" class="disc-type-btn" data-disc-type="percent">%</button>
+                </div>
+                <input type="number" id="pos-disc-input" class="pos-input-sm disc-input" min="0" step="1" placeholder="0" aria-label="Discount amount">
+                <div class="quick-disc-pills">
+                  <button type="button" class="quick-pill" data-quick-disc="50">৳50</button>
+                  <button type="button" class="quick-pill" data-quick-disc="100">৳100</button>
+                  <button type="button" class="quick-pill" data-quick-disc="200">৳200</button>
+                </div>
+              </div>
+              <p id="pos-disc-warning" class="bill-warning-note" hidden>Discount exceeds 15% cashier limit — Owner override required in live POS.</p>
+            </div>
+
+            <!-- Payment Mode Tabs -->
+            <div class="bill-payment-block">
+              <div class="pay-mode-tabs" role="tablist" aria-label="Payment method">
+                <button type="button" class="pay-mode-btn is-active" data-pay-mode="cash">Cash</button>
+                <button type="button" class="pay-mode-btn" data-pay-mode="bkash">bKash</button>
+                <button type="button" class="pay-mode-btn" data-pay-mode="nagad">Nagad</button>
+                <button type="button" class="pay-mode-btn" data-pay-mode="card">Card</button>
+                <button type="button" class="pay-mode-btn" data-pay-mode="split">Split</button>
+              </div>
+
+              <!-- Cash Panel -->
+              <div id="pay-panel-cash" class="pay-panel">
+                <div class="quick-cash-row">
+                  <button type="button" class="quick-pill" data-quick-cash="exact">Exact</button>
+                  <button type="button" class="quick-pill" data-quick-cash="500">৳500</button>
+                  <button type="button" class="quick-pill" data-quick-cash="1000">৳1,000</button>
+                  <button type="button" class="quick-pill" data-quick-cash="2000">৳2,000</button>
+                  <button type="button" class="quick-pill" data-quick-cash="5000">৳5,000</button>
+                </div>
+                <div class="cash-tender-grid">
+                  <label class="cash-field">
+                    <span>Cash Received (৳)</span>
+                    <input type="number" id="pos-cash-tendered" class="pos-input-sm tabular-price" min="0" step="1" placeholder="0">
+                  </label>
+                  <div class="change-box">
+                    <span>Change Return</span>
+                    <strong id="pos-change-due" class="tabular-price">৳0</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- MFS / Card Panel -->
+              <div id="pay-panel-mfs" class="pay-panel" hidden>
+                <label class="mfs-field">
+                  <span id="pos-mfs-label">bKash TrxID / Last 4 Digits (Optional)</span>
+                  <input type="text" id="pos-mfs-ref" class="pos-input-sm" placeholder="e.g. BK9A2X74 or 4821" autocomplete="off">
+                </label>
+              </div>
+
+              <!-- Split Tender Panel -->
+              <div id="pay-panel-split" class="pay-panel" hidden>
+                <div id="pos-split-remaining" class="split-remaining-bar tabular-price">Remaining Due: ৳0</div>
+                <div class="split-grid">
+                  <label class="cash-field">
+                    <span>Cash Part (৳)</span>
+                    <input type="number" id="pos-split-cash" class="pos-input-sm tabular-price" min="0" step="1" placeholder="0">
+                  </label>
+                  <label class="cash-field">
+                    <span>2nd Tender</span>
+                    <select id="pos-split-mfs-method" class="pos-input-sm">
+                      <option value="bkash">bKash</option>
+                      <option value="nagad">Nagad</option>
+                      <option value="card">Card</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="split-grid split-grid-bottom">
+                  <div class="split-amount-wrap">
+                    <input type="number" id="pos-split-mfs-amount" class="pos-input-sm tabular-price" min="0" step="1" placeholder="2nd amount">
+                    <button type="button" id="pos-split-autofill-btn" class="quick-pill">Auto-Fill Rest</button>
+                  </div>
+                  <input type="text" id="pos-split-ref" class="pos-input-sm" placeholder="TrxID / Last 4" autocomplete="off">
+                </div>
+              </div>
+            </div>
+
+            <!-- Totals & Primary Action -->
+            <div class="bill-totals">
+              <div class="bill-total-line">
+                <span>Subtotal</span>
+                <span id="pos-subtotal" class="tabular-price">৳0</span>
+              </div>
+              <div id="pos-discount-row" class="bill-total-line bill-discount-line" hidden>
+                <span>Counter Discount</span>
+                <span id="pos-discount-val" class="tabular-price">-৳0</span>
+              </div>
+              <div class="bill-total-line bill-net-line">
+                <span>Net Payable</span>
+                <strong id="pos-net-total" class="tabular-price">৳0</strong>
+              </div>
+            </div>
+
+            <p id="pos-bill-error" class="pos-inline-error" role="alert" hidden></p>
+
+            <button type="button" id="pos-complete-btn" class="btn-pos-primary" disabled>
+              Complete Sale &amp; Print Receipt
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Mobile Sticky Bill Bar (<1024px when on Catalog pane) -->
+      <div id="pos-mobile-sticky-bill" class="pos-mobile-sticky-bill">
+        <span id="pos-mobile-sticky-summary" class="tabular-price">0 items · ৳0</span>
+        <button type="button" class="btn-pos-sticky-open" data-pos-pane="bill">View Bill →</button>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         VIEW 2: UNIFIED ONLINE ORDERS & SHOWROOM LEDGER
+         ================================================================ -->
+    <section id="view-orders" class="workspace-view" aria-label="Unified Online Orders and POS History" hidden>
+      <div class="workspace-container">
+        <div class="workspace-head">
+          <div>
+            <span class="workspace-eyebrow">Single-Database Order Pipeline</span>
+            <h1 class="workspace-title">Online COD Orders &amp; Showroom Ledger</h1>
+          </div>
+        </div>
+
+        <!-- 5 Live KPI Tiles -->
+        <div id="orders-kpi-strip" class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Pending Online</span>
+            <strong id="kpi-pending" class="kpi-value kpi-amber tabular-price">0</strong>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Confirmed / Packed</span>
+            <strong id="kpi-confirmed" class="kpi-value tabular-price">0</strong>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Shipped / In Transit</span>
+            <strong id="kpi-shipped" class="kpi-value tabular-price">0</strong>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Showroom POS Sales</span>
+            <strong id="kpi-pos-sales" class="kpi-value kpi-green tabular-price">৳0</strong>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Total Active Revenue</span>
+            <strong id="kpi-total-rev" class="kpi-value tabular-price">৳0</strong>
+          </div>
+        </div>
+
+        <!-- Filter Tabs + Search -->
+        <div class="orders-toolbar">
+          <div id="orders-filter-tabs" class="orders-filter-tabs" role="tablist" aria-label="Filter orders">
+            <button type="button" class="filter-pill is-active" data-order-filter="all">All</button>
+            <button type="button" class="filter-pill" data-order-filter="pending">Pending Online</button>
+            <button type="button" class="filter-pill" data-order-filter="confirmed">Confirmed</button>
+            <button type="button" class="filter-pill" data-order-filter="packed">Packed</button>
+            <button type="button" class="filter-pill" data-order-filter="shipped">Shipped</button>
+            <button type="button" class="filter-pill" data-order-filter="delivered">Delivered</button>
+            <button type="button" class="filter-pill" data-order-filter="pos">Showroom POS</button>
+            <button type="button" class="filter-pill" data-order-filter="cancelled_returned">Cancelled / Returned</button>
+          </div>
+          <input type="search" id="orders-search-input" class="pos-input-sm orders-search" placeholder="Search #LIS, #POS, phone, customer..." autocomplete="off">
+        </div>
+
+        <div id="orders-list" class="orders-list"></div>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         VIEW 3: LIVE VARIANT INVENTORY & DAILY SHIFT RECONCILIATION
+         ================================================================ -->
+    <section id="view-inventory" class="workspace-view" aria-label="Live Variant Inventory and Daily Shift" hidden>
+      <div class="workspace-container">
+        <div class="workspace-head workspace-head-row">
+          <div>
+            <span class="workspace-eyebrow">Real-Time Single Source of Truth</span>
+            <h1 class="workspace-title">Inventory Stock Sheet &amp; Daily Shift</h1>
+          </div>
+          <button type="button" id="reset-demo-btn" class="btn-reset-demo">Reset Demo Data</button>
+        </div>
+
+        <!-- Shift Cash & Payment Summary -->
+        <div id="shift-summary-grid" class="shift-summary-grid"></div>
+
+        <!-- Stock Sheet & Movements Split -->
+        <div class="inv-split-grid">
+          <div class="inv-panel">
+            <div class="inv-toolbar">
+              <div class="inv-toolbar-left">
+                <input type="search" id="inv-search-input" class="pos-input-sm inv-search" placeholder="Search SKU, product name, category..." autocomplete="off">
+                <button type="button" id="inv-low-only-btn" class="filter-pill">Low Stock / OOS Only</button>
+              </div>
+              <span id="inv-total-skus" class="inv-count tabular-price">72 Variant SKUs</span>
+            </div>
+            <div id="inventory-list" class="inventory-list"></div>
+          </div>
+
+          <aside class="movements-panel" aria-label="Immutable stock movement audit log">
+            <div class="movements-head">
+              <h2>Stock Movement Ledger</h2>
+              <span class="movements-sub">Immutable audit trail</span>
+            </div>
+            <div id="movements-list" class="movements-list"></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Shared Modal Backdrop -->
+  <div id="pos-modal-backdrop" class="pos-modal-backdrop no-print" aria-hidden="true"></div>
+
+  <!-- Modal 1: 1-Tap Size Matrix Picker -->
+  <div id="size-matrix-modal" class="pos-modal no-print" role="dialog" aria-modal="true" aria-labelledby="sm-title" aria-hidden="true">
+    <div class="pos-modal-card pos-modal-sm">
+      <div class="pos-modal-header">
+        <div class="sm-product-head">
+          <img id="sm-img" class="sm-thumb" src="" alt="">
+          <div class="sm-meta">
+            <span id="sm-sku" class="sm-sku">SKU</span>
+            <h2 id="sm-title" class="pos-modal-title">Select Size</h2>
+            <strong id="sm-price" class="sm-price tabular-price">৳0</strong>
+          </div>
+        </div>
+        <button type="button" id="sm-close-btn" class="pos-close-btn" aria-label="Close size picker">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="pos-modal-body">
+        <p class="modal-helper">Tap an in-stock size to add directly to Active Bill:</p>
+        <div id="sm-grid" class="size-matrix-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: 7-Day Atomic Size Exchange -->
+  <div id="exchange-modal" class="pos-modal no-print" role="dialog" aria-modal="true" aria-label="7-Day Size Exchange" aria-hidden="true">
+    <div class="pos-modal-card pos-modal-sm">
+      <div class="pos-modal-header">
+        <div>
+          <span class="modal-eyebrow">Atomic Stock Swap</span>
+          <h2 class="pos-modal-title">7-Day Size Exchange</h2>
+        </div>
+        <button type="button" id="ex-close-btn" class="pos-close-btn" aria-label="Close size exchange">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="pos-modal-body">
+        <p id="ex-order-info" class="ex-order-info"></p>
+        <div id="ex-current-item" class="ex-current-item"></div>
+        <p class="modal-helper">Select replacement in-stock size (old size restocks +1, new size deducts −1):</p>
+        <div id="ex-size-grid" class="size-matrix-grid"></div>
+        <p id="ex-error" class="pos-inline-error" role="alert" hidden></p>
+      </div>
+      <div class="pos-modal-footer">
+        <button type="button" id="ex-confirm-btn" class="btn-pos-primary" disabled>Confirm Atomic Size Swap</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Cancel / Return Restock Confirm -->
+  <div id="return-modal" class="pos-modal no-print" role="dialog" aria-modal="true" aria-labelledby="ret-title" aria-hidden="true">
+    <div class="pos-modal-card pos-modal-sm">
+      <div class="pos-modal-header">
+        <div>
+          <span class="modal-eyebrow">Double-Restock Protected</span>
+          <h2 id="ret-title" class="pos-modal-title">Cancel &amp; Restock Order</h2>
+        </div>
+        <button type="button" id="ret-close-btn" class="pos-close-btn" aria-label="Close return dialog">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="pos-modal-body">
+        <div id="ret-order-info" class="ret-order-info"></div>
+        <label class="ret-check-row">
+          <input type="checkbox" id="ret-damaged-check">
+          <span>Item damaged / unsellable — do <strong>NOT</strong> return to sellable stock</span>
+        </label>
+      </div>
+      <div class="pos-modal-footer">
+        <button type="button" id="ret-confirm-btn" class="btn-pos-danger">Confirm &amp; Update Stock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: 80mm / 58mm Thermal Receipt & A4 Packing Slip Print Modal -->
+  <div id="print-modal" class="pos-modal pos-modal-print" role="dialog" aria-modal="true" aria-labelledby="print-modal-title" aria-hidden="true">
+    <div class="pos-modal-card pos-modal-print-card">
+      <div class="pos-modal-header no-print">
+        <div class="print-head-left">
+          <h2 id="print-modal-title" class="pos-modal-title">Thermal Receipt Preview</h2>
+          <div id="print-width-toggle" class="print-width-toggle" role="group" aria-label="Thermal paper width">
+            <button type="button" class="width-btn is-active" data-print-width="80mm">80mm</button>
+            <button type="button" class="width-btn" data-print-width="58mm">58mm</button>
+          </div>
+        </div>
+        <button type="button" id="print-close-btn" class="pos-close-btn" aria-label="Close print preview">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="pos-modal-body print-preview-scroll">
+        <div id="print-preview-area" class="print-preview-area"></div>
+      </div>
+
+      <div class="pos-modal-footer print-footer-actions no-print">
+        <button type="button" id="print-trigger-btn" class="btn-pos-primary">Print Now</button>
+        <button type="button" id="print-new-sale-btn" class="btn-pos-secondary">New Sale</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="data/catalog.js" defer></script>
+  <script src="data/store.js" defer></script>
+  <script src="pos.js" defer></script>
+</body>
+</html>

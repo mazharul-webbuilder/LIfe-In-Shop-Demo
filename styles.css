@@ -219,14 +219,46 @@ textarea:focus-visible {
 
 .announcement-inner {
   min-width: 0;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.announcement-text {
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.announcement-pos-link {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 2px;
+  padding: 2px 8px;
+  line-height: 1.4;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.announcement-pos-link:hover {
+  background-color: #FFFFFF;
+  border-color: #FFFFFF;
+  color: var(--bg-dark);
 }
 
 /* ---------- Sticky Header ---------- */
@@ -748,6 +780,11 @@ textarea:focus-visible {
   padding: 4px 8px;
 }
 
+.card-badge.is-soldout {
+  background-color: var(--ink-primary);
+  color: #FFFFFF;
+}
+
 .card-meta {
   min-width: 0;
   padding-top: 11px;
@@ -783,6 +820,33 @@ textarea:focus-visible {
   font-size: 12.5px;
   color: var(--ink-muted);
   text-decoration: line-through;
+}
+
+/* Unique-Footwear-Inspired Live Size Availability Pills */
+.card-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.card-size-pill {
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.25;
+  padding: 2px 6px;
+  border: 1px solid var(--border-hairline);
+  background-color: var(--bg-surface);
+  color: var(--ink-secondary);
+  font-variant-numeric: tabular-nums;
+  border-radius: 2px;
+}
+
+.card-size-pill.is-oos {
+  text-decoration: line-through;
+  opacity: 0.42;
+  background-color: var(--bg-page);
+  color: var(--ink-muted);
 }
 
 /* ---------- 4-Item Hairline Trust & Showroom Strip ---------- */
@@ -947,6 +1011,29 @@ textarea:focus-visible {
   gap: 12px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.5);
+}
+
+.footer-bottom-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-pos-link {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.45);
+  padding-bottom: 1px;
+  transition: opacity 0.16s ease;
+}
+
+.footer-pos-link:hover {
+  opacity: 0.75;
 }
 
 /* ==========================================================================
@@ -1147,7 +1234,49 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
+}
+
+/* HeemsBD-Inspired Live Per-Size Stock Counter */
+.stock-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stock-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stock-status.is-in {
+  color: var(--accent-stock);
+}
+
+.stock-status.is-in .stock-status-dot {
+  background-color: var(--accent-stock);
+}
+
+.stock-status.is-low {
+  color: #D97706;
+}
+
+.stock-status.is-low .stock-status-dot {
+  background-color: #D97706;
+}
+
+.stock-status.is-out {
+  color: var(--accent-crimson);
+}
+
+.stock-status.is-out .stock-status-dot {
+  background-color: var(--accent-crimson);
 }
 
 .pdp-price {
@@ -1892,16 +2021,59 @@ textarea:focus-visible {
   flex-shrink: 0;
 }
 
+/* Inline Qty Stepper Inside Express Checkout Summary */
+.checkout-item-qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  background-color: var(--bg-surface);
+  border-radius: 2px;
+  height: 26px;
+  margin-top: 4px;
+}
+
+.checkout-qty-btn {
+  width: 24px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--ink-primary);
+}
+
+.checkout-qty-btn:hover:not(:disabled) {
+  background-color: var(--bg-subtle);
+}
+
+.checkout-qty-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.checkout-qty-num {
+  min-width: 24px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 .form-group {
-  margin-bottom: 11px;
+  margin-bottom: 9px;
 }
 
 .form-label {
   display: block;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--ink-primary);
   margin-bottom: 4px;
+}
+
+.label-opt {
+  font-weight: 400;
+  color: var(--ink-muted);
 }
 
 .req {
@@ -1910,12 +2082,12 @@ textarea:focus-visible {
 
 .form-input {
   width: 100%;
-  height: 40px;
-  padding: 0 12px;
+  height: 38px;
+  padding: 0 11px;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-strong);
   border-radius: 2px;
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--ink-primary);
   transition: border-color 0.16s ease;
 }
@@ -1927,9 +2099,9 @@ textarea:focus-visible {
 
 .form-textarea {
   height: auto;
-  padding: 8px 12px;
+  padding: 7px 11px;
   resize: vertical;
-  min-height: 56px;
+  min-height: 48px;
 }
 
 .radio-grid {
@@ -2785,9 +2957,15 @@ textarea:focus-visible {
   .announcement-inner {
     font-size: 10px;
     letter-spacing: 0.03em;
+    gap: 8px;
   }
 
   .announcement-extra {
     display: none;
+  }
+
+  .announcement-pos-link {
+    font-size: 9.5px;
+    padding: 2px 6px;
   }
 }

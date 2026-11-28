@@ -17,7 +17,8 @@
   <!-- Announcement Bar -->
   <div class="announcement-bar" role="region" aria-label="Store shipping notice">
     <div class="container announcement-inner">
-      <span>Inside Dhaka ৳80 · Outside Dhaka ৳130 · Cash on Delivery<span class="announcement-extra"> · Narayanganj Showroom</span></span>
+      <span class="announcement-text">Inside Dhaka ৳80 · Outside Dhaka ৳130 · Cash on Delivery<span class="announcement-extra"> · Narayanganj Showroom</span></span>
+      <a href="pos.html" class="announcement-pos-link">Showroom POS &amp; Orders ↗</a>
     </div>
   </div>
 
@@ -118,6 +119,11 @@
               <span id="pdp-price" class="pdp-price tabular-price">৳0</span>
               <span id="pdp-compare-price" class="pdp-compare-price tabular-price" hidden></span>
               <span id="pdp-discount-badge" class="pdp-discount-badge" hidden></span>
+            </div>
+
+            <div id="pdp-stock-status" class="stock-status is-in" aria-live="polite">
+              <span class="stock-status-dot" aria-hidden="true"></span>
+              <span class="stock-status-text">Checking live showroom stock...</span>
             </div>
 
             <p id="pdp-short-desc" class="pdp-short-desc"></p>
@@ -254,7 +260,10 @@
 
       <div class="footer-bottom">
         <p>&copy; 2026 Life In Shop. All rights reserved.</p>
-        <p class="footer-demo-note">Interactive Storefront Concept Preview</p>
+        <div class="footer-bottom-right">
+          <a href="pos.html" class="footer-pos-link">Showroom POS &amp; Orders ↗</a>
+          <p class="footer-demo-note">Interactive Storefront Concept Preview</p>
+        </div>
       </div>
     </div>
   </footer>
@@ -327,6 +336,7 @@
         <p class="mobile-nav-meta-title">Narayanganj Showroom</p>
         <p class="mobile-nav-meta-text">Jalkhuri, Shimanto Tower, Level 6, Shop 6031</p>
         <div class="mobile-nav-meta-actions">
+          <a href="pos.html" class="meta-action-link meta-action-pos">Showroom POS &amp; Orders ↗</a>
           <a href="tel:+8801647166769" class="meta-action-link">Call +8801647-166769</a>
           <a href="https://wa.me/8801647166769" target="_blank" rel="noopener" class="meta-action-link">WhatsApp Support</a>
         </div>
@@ -436,6 +446,11 @@
         <div class="form-group">
           <label for="co-address" class="form-label">Full Delivery Address <span class="req">*</span></label>
           <textarea id="co-address" class="form-input form-textarea" rows="2" placeholder="House, Road, Area / Thana, District" autocomplete="street-address" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="co-note" class="form-label">Delivery Note <span class="label-opt">(Optional)</span></label>
+          <input type="text" id="co-note" class="form-input" placeholder="e.g. Call before delivery or leave with guard">
         </div>
 
         <div class="form-group">
@@ -556,6 +571,7 @@
   </section>
 
   <script src="data/catalog.js" defer></script>
+  <script src="data/store.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>

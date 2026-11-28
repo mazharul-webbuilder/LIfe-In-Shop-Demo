@@ -4,6 +4,7 @@
   const catalog = window.LIFEINSHOP_CATALOG;
   if (!catalog) return;
   const { BRAND, CATEGORIES, HERO_SLIDES, PRODUCTS, SIZE_CHARTS } = catalog;
+  const STORE = window.LIFEINSHOP_STORE || null;
 
 const BAG_STORAGE_KEY = 'lifeinshop_bag_v1';
 const DEFAULT_PRODUCT_ID = 'air-jordan-4-grey';
@@ -13,6 +14,42 @@ const AI_TYPING_DELAY_MS = 450;
 /* ==========================================================================
    Shared Helpers
    ========================================================================== */
+
+function getVariantStock(productId, size) {
+  if (STORE && typeof STORE.getStock === 'function') {
+    return STORE.getStock(productId, size);
+  }
+  return 5;
+}
+
+function getProductStockMap(productId) {
+  if (STORE && typeof STORE.getProductStockMap === 'function') {
+    return STORE.getProductStockMap(productId);
+  }
+  const product = getProductById(productId);
+  const out = {};
+  if (product && Array.isArray(product.sizes)) {
+    product.sizes.forEach((s) => {
+      out[s] = 5;
+    });
+  }
+  return out;
+}
+
+function getProductTotalStock(productId) {
+  if (STORE && typeof STORE.getProductTotalStock === 'function') {
+    return STORE.getProductTotalStock(productId);
+  }
+  return 10;
+}
+
+function getFirstInStockSize(productId) {
+  if (STORE && typeof STORE.getFirstInStockSize === 'function') {
+    return STORE.getFirstInStockSize(productId);
+  }
+  const product = getProductById(productId);
+  return product && product.sizes && product.sizes.length ? String(product.sizes[0]) : null;
+}
 
 function formatBDT(amount) {
   const num = Math.round(Number(amount) || 0);
@@ -69,6 +106,9 @@ const state = {
   // AI Chat
   chatInitialized: false,
   chatReplyTimer: null,
+  // Live Store Sync Hooks
+  refreshHomeView: null,
+  refreshPDPView: null,
 };
 
 /* ==========================================================================
@@ -130,26 +170,37 @@ function getItemsSubtotal(items) {
 
 function addToBag(productId, size, qty = 1) {
   const product = getProductById(productId);
-  if (!product) return;
-  const safeQty = Math.min(10, Math.max(1, parseInt(qty, 10) || 1));
-  const existing = state.bag.find((item) => item.id === productId && item.size === size);
+  if (!product) return { ok: false, error: 'Product not found.' };
+  const avail = getVariantStock(productId, size);
+  if (avail <= 0) {
+    return { ok: false, error: `Size ${size} is currently out of stock.` };
+  }
+  const maxAllowed = Math.min(10, avail);
+  const safeQty = Math.min(maxAllowed, Math.max(1, parseInt(qty, 10) || 1));
+  const existing = state.bag.find((item) => item.id === productId && item.size === String(size));
   if (existing) {
-    existing.qty = Math.min(10, existing.qty + safeQty);
+    if (existing.qty >= maxAllowed) {
+      return { ok: false, error: `Only ${avail} left in Size ${size} (already in your bag).` };
+    }
+    existing.qty = Math.min(maxAllowed, existing.qty + safeQty);
   } else {
     state.bag.push({ id: productId, size: String(size), qty: safeQty });
   }
   saveBag();
   renderBagUI();
+  return { ok: true };
 }
 
 function updateBagItemQty(index, delta) {
   const item = state.bag[index];
   if (!item) return;
+  const avail = getVariantStock(item.id, item.size);
+  const maxAllowed = Math.min(10, Math.max(1, avail));
   const nextQty = item.qty + delta;
   if (nextQty <= 0) {
     state.bag.splice(index, 1);
   } else {
-    item.qty = Math.min(10, nextQty);
+    item.qty = Math.min(maxAllowed, nextQty);
   }
   saveBag();
   renderBagUI();
@@ -323,13 +374,29 @@ function renderProductCard(product) {
   const secondaryImg = product.images.length > 1 ? product.images[1] : null;
   const hasDiscount = Boolean(product.compareAtPrice && product.compareAtPrice > product.price);
   const badgeText = product.badge || (hasDiscount ? `Save ${formatBDT(product.compareAtPrice - product.price)}` : '');
+  const stockMap = getProductStockMap(product.id);
+  const totalStock = getProductTotalStock(product.id);
+  const isSoldOut = totalStock <= 0;
+
+  const badgeHtml = isSoldOut
+    ? '<span class="card-badge is-soldout">Sold Out</span>'
+    : hasDiscount
+    ? `<span class="card-badge">${escapeHtml(badgeText)}</span>`
+    : '';
+
+  const sizePillsHtml = (product.sizes || [])
+    .map((size) => {
+      const qty = Object.prototype.hasOwnProperty.call(stockMap, size) ? stockMap[size] : 1;
+      return `<span class="card-size-pill${qty <= 0 ? ' is-oos' : ''}">${escapeHtml(size)}</span>`;
+    })
+    .join('');
 
   return `
     <a href="${href}" class="product-card">
       <div class="card-media">
         <img class="card-img-primary" src="${escapeHtml(primaryImg)}" alt="${escapeHtml(product.name)}" loading="lazy">
         ${secondaryImg ? `<img class="card-img-secondary" src="${escapeHtml(secondaryImg)}" alt="" loading="lazy" aria-hidden="true">` : ''}
-        ${hasDiscount ? `<span class="card-badge">${escapeHtml(badgeText)}</span>` : ''}
+        ${badgeHtml}
       </div>
       <div class="card-meta">
         <h3 class="card-title">${escapeHtml(product.name)}</h3>
@@ -337,6 +404,7 @@ function renderProductCard(product) {
           <span class="card-price">${formatBDT(product.price)}</span>
           ${hasDiscount ? `<span class="card-compare">${formatBDT(product.compareAtPrice)}</span>` : ''}
         </div>
+        ${sizePillsHtml ? `<div class="card-sizes" aria-label="Live size availability">${sizePillsHtml}</div>` : ''}
       </div>
     </a>
   `;
@@ -429,15 +497,75 @@ function updatePaymentUI() {
   }
 }
 
+function renderCheckoutSummaryItems() {
+  const summaryWrap = document.getElementById('checkout-summary-items');
+  if (!summaryWrap) return;
+
+  summaryWrap.innerHTML = state.checkoutItems
+    .map(({ product, size, qty }, idx) => {
+      const avail = getVariantStock(product.id, size);
+      const maxQty = Math.min(10, Math.max(1, avail));
+      const stockMeta = avail <= 0 ? 'Sold out' : `${avail} in stock`;
+      return `
+        <div class="checkout-summary-row" data-co-idx="${idx}">
+          <img src="${escapeHtml(product.images[0])}" alt="${escapeHtml(product.name)}">
+          <div class="checkout-summary-meta">
+            <div class="checkout-summary-name">${escapeHtml(product.name)}</div>
+            <div class="checkout-summary-sub">Size ${escapeHtml(size)} · ${escapeHtml(stockMeta)}</div>
+            <div class="checkout-item-qty" role="group" aria-label="Adjust quantity for ${escapeHtml(product.name)}">
+              <button type="button" class="checkout-qty-btn" data-co-dec="${idx}" aria-label="Decrease quantity" ${qty <= 1 ? 'disabled' : ''}>−</button>
+              <span class="checkout-qty-num">${qty}</span>
+              <button type="button" class="checkout-qty-btn" data-co-inc="${idx}" aria-label="Increase quantity" ${avail <= 0 || qty >= maxQty ? 'disabled' : ''}>+</button>
+            </div>
+          </div>
+          <span class="checkout-summary-price">${formatBDT(product.price * qty)}</span>
+        </div>
+      `;
+    })
+    .join('');
+}
+
+function updateCheckoutItemQty(idx, delta) {
+  const entry = state.checkoutItems[idx];
+  if (!entry) return;
+  const avail = getVariantStock(entry.id, entry.size);
+  const maxQty = Math.min(10, Math.max(1, avail));
+  const nextQty = Math.min(maxQty, Math.max(1, entry.qty + delta));
+  if (nextQty === entry.qty) return;
+
+  entry.qty = nextQty;
+
+  if (state.checkoutSource === 'bag') {
+    const bagMatch = state.bag.find((b) => b.id === entry.id && b.size === entry.size);
+    if (bagMatch) {
+      bagMatch.qty = nextQty;
+      saveBag();
+      renderBagUI();
+    }
+  }
+
+  const errorEl = document.getElementById('co-error');
+  if (errorEl) {
+    errorEl.textContent = '';
+    errorEl.hidden = true;
+  }
+
+  renderCheckoutSummaryItems();
+  updateCheckoutTotals();
+}
+
 function openCheckout(items, source, triggerEl = null) {
   const validItems = (items || [])
     .map((entry) => {
       const product = entry.product || getProductById(entry.id);
       if (!product) return null;
+      const size = String(entry.size || getFirstInStockSize(product.id) || product.sizes[0] || '');
+      const avail = getVariantStock(product.id, size);
+      const maxQty = Math.min(10, Math.max(1, avail));
       return {
         id: product.id,
-        size: String(entry.size || product.sizes[0] || ''),
-        qty: Math.min(10, Math.max(1, parseInt(entry.qty, 10) || 1)),
+        size,
+        qty: Math.min(maxQty, Math.max(1, parseInt(entry.qty, 10) || 1)),
         product,
       };
     })
@@ -451,7 +579,6 @@ function openCheckout(items, source, triggerEl = null) {
   const form = document.getElementById('checkout-form');
   const successView = document.getElementById('checkout-success');
   const errorEl = document.getElementById('co-error');
-  const summaryWrap = document.getElementById('checkout-summary-items');
 
   if (form) form.hidden = false;
   if (successView) successView.hidden = true;
@@ -460,23 +587,7 @@ function openCheckout(items, source, triggerEl = null) {
     errorEl.hidden = true;
   }
 
-  if (summaryWrap) {
-    summaryWrap.innerHTML = validItems
-      .map(
-        ({ product, size, qty }) => `
-          <div class="checkout-summary-row">
-            <img src="${escapeHtml(product.images[0])}" alt="${escapeHtml(product.name)}">
-            <div class="checkout-summary-meta">
-              <div class="checkout-summary-name">${escapeHtml(product.name)}</div>
-              <div class="checkout-summary-sub">Size ${escapeHtml(size)} · Qty ${qty}</div>
-            </div>
-            <span class="checkout-summary-price">${formatBDT(product.price * qty)}</span>
-          </div>
-        `
-      )
-      .join('');
-  }
-
+  renderCheckoutSummaryItems();
   updatePaymentUI();
   updateCheckoutTotals();
   openOverlay('checkout', triggerEl);
@@ -506,6 +617,7 @@ function handleCheckoutSubmit(event) {
   const nameInput = document.getElementById('co-name');
   const phoneInput = document.getElementById('co-phone');
   const addressInput = document.getElementById('co-address');
+  const noteInput = document.getElementById('co-note');
   const errorEl = document.getElementById('co-error');
 
   if (errorEl) {
@@ -522,6 +634,7 @@ function handleCheckoutSubmit(event) {
   const phone = normalizeBDPhone(phoneInput?.value || '');
   if (phoneInput) phoneInput.value = phone;
   const address = String(addressInput?.value || '').trim();
+  const deliveryNote = String(noteInput?.value || '').trim();
 
   if (fullName.length < 2) {
     showCheckoutError('Please enter your full name (at least 2 characters).', nameInput);
@@ -543,8 +656,38 @@ function handleCheckoutSubmit(event) {
   const zoneLabel = zone === 'outside' ? 'Outside Dhaka' : 'Inside Dhaka';
   const paymentLabel = payment === 'bkash' ? 'bKash / Nagad (Demo)' : 'Cash on Delivery';
 
-  const orderNumber = Math.floor(1000 + Math.random() * 9000);
-  const orderId = `#LIS-${orderNumber}`;
+  let orderId = `#LIS-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  if (STORE && typeof STORE.commitSale === 'function') {
+    const commitRes = STORE.commitSale({
+      channel: 'online',
+      items: state.checkoutItems.map(({ product, size, qty }) => ({
+        productId: product.id,
+        name: product.name,
+        size,
+        qty,
+        price: product.price,
+        image: product.images[0] || '',
+      })),
+      customerName: fullName,
+      customerPhone: phone,
+      address,
+      deliveryNote,
+      zone,
+      deliveryFee: shipping,
+      paymentMethod: payment,
+    });
+
+    if (!commitRes || !commitRes.ok) {
+      renderCheckoutSummaryItems();
+      showCheckoutError((commitRes && commitRes.error) || 'Selected item is no longer in stock.');
+      return;
+    }
+
+    if (commitRes.order && commitRes.order.orderNumber) {
+      orderId = commitRes.order.orderNumber;
+    }
+  }
 
   const itemLinesPlain = state.checkoutItems.map(
     ({ product, size, qty }) => `- ${product.name} (Size ${size} x ${qty}) = ${formatBDT(product.price * qty)}`
@@ -568,6 +711,7 @@ function handleCheckoutSubmit(event) {
     orderSummaryEl.innerHTML = `
       <div style="margin-bottom:8px;"><strong>Customer:</strong> ${escapeHtml(fullName)} (${escapeHtml(phone)})</div>
       <div style="margin-bottom:8px;"><strong>Delivery (${escapeHtml(zoneLabel)}):</strong> ${escapeHtml(address)}</div>
+      ${deliveryNote ? `<div style="margin-bottom:8px;"><strong>Note:</strong> ${escapeHtml(deliveryNote)}</div>` : ''}
       <div style="margin-bottom:8px;"><strong>Payment:</strong> ${escapeHtml(paymentLabel)}</div>
       <div style="margin-bottom:8px;padding-top:8px;border-top:1px solid var(--border-hairline);">${itemLinesHtml}</div>
       <div style="padding-top:8px;border-top:1px solid var(--border-hairline);color:var(--ink-primary);">
@@ -577,22 +721,22 @@ function handleCheckoutSubmit(event) {
     `;
   }
 
-  const waText = [
+  const waParts = [
     `Hello Life In Shop, I placed a demo order:`,
     `Order ID: ${orderId}`,
     `Name: ${fullName}`,
     `Phone: ${phone}`,
     `Zone: ${zoneLabel} (${formatBDT(shipping)})`,
     `Address: ${address}`,
-    `Payment: ${paymentLabel}`,
-    `Items:`,
-    ...itemLinesPlain,
-    `Total Payable: ${formatBDT(total)}`,
-  ].join('\n');
+  ];
+  if (deliveryNote) waParts.push(`Note: ${deliveryNote}`);
+  waParts.push(`Payment: ${paymentLabel}`, `Items:`, ...itemLinesPlain, `Total Payable: ${formatBDT(total)}`);
 
   if (waConfirmEl) {
-    waConfirmEl.href = `${BRAND.whatsappUrl}?text=${encodeURIComponent(waText)}`;
+    waConfirmEl.href = `${BRAND.whatsappUrl}?text=${encodeURIComponent(waParts.join('\n'))}`;
   }
+
+  if (noteInput) noteInput.value = '';
 
   if (state.checkoutSource === 'bag') {
     clearBag();
@@ -1069,6 +1213,11 @@ function initHomeCatalog() {
     });
   });
 
+  // Register live cross-tab stock refresh hook
+  state.refreshHomeView = () => {
+    applyCategoryFilter(state.activeCategory, { scroll: false, updateUrl: false });
+  };
+
   // Initial URL ?category= param handling
   const initialParam = new URLSearchParams(window.location.search).get('category');
   if (initialParam && validCategories.has(initialParam)) {
@@ -1112,6 +1261,8 @@ function initProductPage() {
   const priceEl = document.getElementById('pdp-price');
   const compareEl = document.getElementById('pdp-compare-price');
   const discountBadge = document.getElementById('pdp-discount-badge');
+  const stockStatusEl = document.getElementById('pdp-stock-status');
+  const stockPillEl = document.querySelector('.pdp-stock-pill');
   const shortDescEl = document.getElementById('pdp-short-desc');
 
   const colorwayWrap = document.getElementById('pdp-colorway-wrap');
@@ -1143,14 +1294,105 @@ function initProductPage() {
   function updateStickyBarMeta() {
     const product = state.currentProduct;
     if (!product) return;
+    const totalStock = getProductTotalStock(product.id);
     if (stickyPrice) {
       stickyPrice.textContent = formatBDT(product.price * state.pdpQty);
     }
     if (stickySize) {
-      stickySize.textContent = state.selectedSize
-        ? `Size ${state.selectedSize} · Qty ${state.pdpQty}`
-        : 'Select size to order';
+      if (totalStock <= 0) {
+        stickySize.textContent = 'Out of Stock';
+      } else {
+        stickySize.textContent = state.selectedSize
+          ? `Size ${state.selectedSize} · Qty ${state.pdpQty}`
+          : 'Select size to order';
+      }
     }
+  }
+
+  function syncPDPStockUI() {
+    const product = state.currentProduct;
+    if (!product) return;
+
+    const stockMap = getProductStockMap(product.id);
+    const totalStock = getProductTotalStock(product.id);
+    const isSoldOut = totalStock <= 0;
+
+    // Auto-preselect first in-stock size if none selected or current size just sold out
+    if (!state.selectedSize || !product.sizes.includes(state.selectedSize) || (stockMap[state.selectedSize] || 0) <= 0) {
+      state.selectedSize = getFirstInStockSize(product.id);
+    }
+
+    // Update top meta stock pill
+    if (stockPillEl) {
+      const labelSpan = stockPillEl.querySelector('span:last-child');
+      if (labelSpan) labelSpan.textContent = isSoldOut ? 'Out of Stock' : 'In Stock';
+      stockPillEl.style.color = isSoldOut ? 'var(--accent-crimson)' : '';
+      const dot = stockPillEl.querySelector('.stock-dot');
+      if (dot) dot.style.backgroundColor = isSoldOut ? 'var(--accent-crimson)' : '';
+    }
+
+    // Render live per-size chips (OOS disabled & struck-through)
+    if (sizesEl) {
+      sizesEl.innerHTML = product.sizes
+        .map((size) => {
+          const avail = stockMap[size] || 0;
+          const oos = avail <= 0;
+          const isActive = !oos && state.selectedSize === size;
+          return `
+            <button
+              type="button"
+              class="size-chip${isActive ? ' is-active' : ''}${oos ? ' is-oos' : ''}"
+              role="radio"
+              aria-checked="${isActive ? 'true' : 'false'}"
+              aria-disabled="${oos ? 'true' : 'false'}"
+              data-size="${escapeHtml(size)}"
+              title="${oos ? `Size ${escapeHtml(size)} — Out of Stock` : `Size ${escapeHtml(size)} — ${avail} left`}"
+              ${oos ? 'disabled' : ''}
+            >${escapeHtml(size)}</button>
+          `;
+        })
+        .join('');
+    }
+
+    // Live per-size stock status strip (#pdp-stock-status)
+    const selectedAvail = state.selectedSize ? stockMap[state.selectedSize] || 0 : 0;
+    if (stockStatusEl) {
+      stockStatusEl.classList.remove('is-in', 'is-low', 'is-out');
+      const textEl = stockStatusEl.querySelector('.stock-status-text') || stockStatusEl;
+      if (isSoldOut || !state.selectedSize || selectedAvail <= 0) {
+        stockStatusEl.classList.add('is-out');
+        textEl.textContent = 'Out of Stock — Restocking soon';
+      } else if (selectedAvail <= 2) {
+        stockStatusEl.classList.add('is-low');
+        textEl.textContent = `Only ${selectedAvail} left in Size ${state.selectedSize}`;
+      } else {
+        stockStatusEl.classList.add('is-in');
+        textEl.textContent = `${selectedAvail} left in Size ${state.selectedSize}`;
+      }
+    }
+
+    // Strictly clamp quantity stepper to live variant stock
+    const maxQty = isSoldOut || selectedAvail <= 0 ? 1 : Math.min(10, selectedAvail);
+    if (state.pdpQty > maxQty) state.pdpQty = maxQty;
+    if (state.pdpQty < 1) state.pdpQty = 1;
+    if (qtyValEl) qtyValEl.textContent = String(state.pdpQty);
+    if (qtyDecBtn) qtyDecBtn.disabled = isSoldOut || state.pdpQty <= 1;
+    if (qtyIncBtn) qtyIncBtn.disabled = isSoldOut || state.pdpQty >= maxQty;
+
+    // Disable conversion CTAs when all sizes are out of stock
+    if (orderNowBtn) {
+      orderNowBtn.disabled = isSoldOut;
+      orderNowBtn.textContent = isSoldOut ? 'Out of Stock' : 'Order Now — Cash on Delivery';
+    }
+    if (addBagBtn) {
+      addBagBtn.disabled = isSoldOut;
+    }
+    if (stickyOrderBtn) {
+      stickyOrderBtn.disabled = isSoldOut;
+      stickyOrderBtn.textContent = isSoldOut ? 'Sold Out' : 'Order Now (COD)';
+    }
+
+    updateStickyBarMeta();
   }
 
   function setGalleryImage(index) {
@@ -1283,27 +1525,9 @@ function initProductPage() {
         .join('');
     }
 
-    // Size chips
-    if (sizesEl) {
-      sizesEl.innerHTML = product.sizes
-        .map((size) => {
-          const isActive = state.selectedSize === size;
-          return `
-            <button
-              type="button"
-              class="size-chip${isActive ? ' is-active' : ''}"
-              role="radio"
-              aria-checked="${isActive ? 'true' : 'false'}"
-              data-size="${escapeHtml(size)}"
-            >${escapeHtml(size)}</button>
-          `;
-        })
-        .join('');
-    }
-
+    // Live size chips, per-size stock status, qty clamp & CTA state
     if (sizeErrorEl) sizeErrorEl.hidden = true;
-    if (qtyValEl) qtyValEl.textContent = String(state.pdpQty);
-    updateStickyBarMeta();
+    syncPDPStockUI();
 
     // Hairline Accordions
     if (accordionsEl) {
@@ -1435,17 +1659,10 @@ function initProductPage() {
   // Size chip selection
   sizesEl?.addEventListener('click', (event) => {
     const chip = event.target.closest('[data-size]');
-    if (!chip || chip.classList.contains('is-oos')) return;
+    if (!chip || chip.disabled || chip.classList.contains('is-oos')) return;
     state.selectedSize = chip.dataset.size;
-
-    sizesEl.querySelectorAll('.size-chip').forEach((btn) => {
-      const active = btn.dataset.size === state.selectedSize;
-      btn.classList.toggle('is-active', active);
-      btn.setAttribute('aria-checked', active ? 'true' : 'false');
-    });
-
     if (sizeErrorEl) sizeErrorEl.hidden = true;
-    updateStickyBarMeta();
+    syncPDPStockUI();
   });
 
   // Size Guide Modal
@@ -1458,24 +1675,33 @@ function initProductPage() {
     if (event.target === sizeGuideModal) closeAllOverlays();
   });
 
-  // Quantity stepper (1..10)
+  // Quantity stepper (clamped strictly to live variant stock, max 10)
   qtyDecBtn?.addEventListener('click', () => {
     if (state.pdpQty <= 1) return;
     state.pdpQty -= 1;
-    if (qtyValEl) qtyValEl.textContent = String(state.pdpQty);
-    updateStickyBarMeta();
+    syncPDPStockUI();
   });
 
   qtyIncBtn?.addEventListener('click', () => {
-    if (state.pdpQty >= 10) return;
+    if (!state.currentProduct || !state.selectedSize) return;
+    const maxQty = Math.min(10, getVariantStock(state.currentProduct.id, state.selectedSize));
+    if (state.pdpQty >= maxQty) return;
     state.pdpQty += 1;
-    if (qtyValEl) qtyValEl.textContent = String(state.pdpQty);
-    updateStickyBarMeta();
+    syncPDPStockUI();
   });
 
   // Order Now — Cash on Delivery (Direct single-item checkout)
   function triggerDirectOrder(triggerEl) {
     if (!ensureSizeSelected() || !state.currentProduct) return;
+    const avail = getVariantStock(state.currentProduct.id, state.selectedSize);
+    if (avail <= 0) {
+      if (sizeErrorEl) {
+        sizeErrorEl.textContent = `Size ${state.selectedSize} is out of stock. Please pick another size.`;
+        sizeErrorEl.hidden = false;
+      }
+      syncPDPStockUI();
+      return;
+    }
     openCheckout(
       [{ id: state.currentProduct.id, size: state.selectedSize, qty: state.pdpQty, product: state.currentProduct }],
       'direct',
@@ -1489,7 +1715,15 @@ function initProductPage() {
   // Add to Bag (Persistent bag + open Bag drawer)
   addBagBtn?.addEventListener('click', () => {
     if (!ensureSizeSelected() || !state.currentProduct) return;
-    addToBag(state.currentProduct.id, state.selectedSize, state.pdpQty);
+    const res = addToBag(state.currentProduct.id, state.selectedSize, state.pdpQty);
+    if (!res.ok) {
+      if (sizeErrorEl) {
+        sizeErrorEl.textContent = res.error || 'Insufficient stock for selected size.';
+        sizeErrorEl.hidden = false;
+      }
+      syncPDPStockUI();
+      return;
+    }
     openOverlay('bag', addBagBtn);
   });
 
@@ -1535,6 +1769,14 @@ function initProductPage() {
       link.setAttribute('href', `index.html?category=${encodeURIComponent(cat)}#catalog-section`);
     }
   });
+
+  state.refreshPDPView = () => {
+    if (!state.currentProduct) return;
+    syncPDPStockUI();
+    if (relatedGrid) {
+      relatedGrid.innerHTML = getRelatedProducts(state.currentProduct).map(renderProductCard).join('');
+    }
+  };
 
   renderPDP(initialProduct);
 
@@ -1628,6 +1870,18 @@ function initSharedInteractions() {
   document.getElementById('checkout-close-btn')?.addEventListener('click', () => closeAllOverlays());
   document.getElementById('co-continue-btn')?.addEventListener('click', () => closeAllOverlays());
 
+  document.getElementById('checkout-summary-items')?.addEventListener('click', (event) => {
+    const decBtn = event.target.closest('[data-co-dec]');
+    if (decBtn) {
+      updateCheckoutItemQty(parseInt(decBtn.dataset.coDec, 10), -1);
+      return;
+    }
+    const incBtn = event.target.closest('[data-co-inc]');
+    if (incBtn) {
+      updateCheckoutItemQty(parseInt(incBtn.dataset.coInc, 10), 1);
+    }
+  });
+
   document.querySelectorAll('input[name="co-zone"]').forEach((radio) => {
     radio.addEventListener('change', () => updateCheckoutTotals());
   });
@@ -1660,10 +1914,15 @@ function initSharedInteractions() {
 
   document.getElementById('checkout-form')?.addEventListener('submit', handleCheckoutSubmit);
 
-  // Sync bag across Back/Forward bfcache navigation & other tabs
+  // Sync bag & live stock across Back/Forward bfcache navigation & other tabs
   window.addEventListener('pageshow', () => {
     loadBag();
     renderBagUI();
+    if (state.page === 'product' && typeof state.refreshPDPView === 'function') {
+      state.refreshPDPView();
+    } else if (typeof state.refreshHomeView === 'function') {
+      state.refreshHomeView();
+    }
   });
 
   window.addEventListener('storage', (event) => {
@@ -1689,6 +1948,23 @@ function init() {
   } else {
     initHeroSlider();
     initHomeCatalog();
+  }
+
+  if (STORE && typeof STORE.subscribe === 'function') {
+    STORE.subscribe(() => {
+      if (state.page === 'product' && typeof state.refreshPDPView === 'function') {
+        state.refreshPDPView();
+      } else if (typeof state.refreshHomeView === 'function') {
+        state.refreshHomeView();
+      }
+      if (state.activeOverlay === 'checkout') {
+        const form = document.getElementById('checkout-form');
+        if (form && !form.hidden) {
+          renderCheckoutSummaryItems();
+          updateCheckoutTotals();
+        }
+      }
+    });
   }
 
   initAIChat();

@@ -29,7 +29,7 @@
       ]
     },
     {
-      "source": "/(styles\\.css|app\\.js|data/catalog\\.js)",
+      "source": "/(styles\\.css|pos\\.css|app\\.js|pos\\.js|data/catalog\\.js|data/store\\.js)",
       "headers": [
         {
           "key": "Cache-Control",
